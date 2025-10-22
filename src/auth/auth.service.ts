@@ -17,7 +17,20 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password, nickname } = registerDto;
+    const { email, password, nickname, username } = registerDto;
+
+    // username 또는 nickname 중 하나는 반드시 있어야 함
+    if (!username && !nickname) {
+      throw new ConflictException('사용자명 또는 닉네임을 입력해주세요.');
+    }
+
+    // username이 있으면 nickname으로 사용, 없으면 nickname 사용
+    const finalNickname = username || nickname;
+
+    // finalNickname이 여전히 undefined인 경우 처리
+    if (!finalNickname) {
+      throw new ConflictException('사용자명 또는 닉네임을 입력해주세요.');
+    }
 
     // 이메일 중복 확인
     const existingUser = await this.prisma.user.findUnique({
@@ -36,7 +49,7 @@ export class AuthService {
       data: {
         email,
         password: hashedPassword,
-        nickname,
+        nickname: finalNickname,
       },
     });
 
@@ -114,3 +127,6 @@ export class AuthService {
     return user;
   }
 }
+
+
+

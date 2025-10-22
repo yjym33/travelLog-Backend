@@ -9,12 +9,23 @@ export class UploadService {
   private bucketName: string;
 
   constructor(private configService: ConfigService) {
+    const region = this.configService.get<string>('AWS_REGION');
+    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
+    const secretAccessKey = this.configService.get<string>(
+      'AWS_SECRET_ACCESS_KEY',
+    );
+    const bucketName = this.configService.get<string>('AWS_S3_BUCKET');
+
+    if (!region || !accessKeyId || !secretAccessKey || !bucketName) {
+      throw new Error('AWS 설정 환경 변수가 올바르게 설정되지 않았습니다.');
+    }
+
     this.s3 = new AWS.S3({
-      region: this.configService.get<string>('AWS_REGION'),
-      accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
+      region,
+      accessKeyId,
+      secretAccessKey,
     });
-    this.bucketName = this.configService.get<string>('AWS_S3_BUCKET');
+    this.bucketName = bucketName;
   }
 
   async uploadFile(
@@ -68,3 +79,6 @@ export class UploadService {
     await Promise.all(deletePromises);
   }
 }
+
+
+

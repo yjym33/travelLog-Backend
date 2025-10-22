@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -13,12 +13,21 @@ import { PrismaModule } from '../prisma/prisma.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRATION', '7d'),
-        },
-      }),
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<JwtModuleOptions> => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret) {
+          throw new Error('JWT_SECRET 환경 변수가 설정되지 않았습니다.');
+        }
+        return {
+          secret,
+          signOptions: {
+            expiresIn: (configService.get<string>('JWT_EXPIRATION') ||
+              '7d') as any,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
   ],
@@ -27,3 +36,6 @@ import { PrismaModule } from '../prisma/prisma.module';
   exports: [AuthService, JwtStrategy, PassportModule],
 })
 export class AuthModule {}
+
+
+

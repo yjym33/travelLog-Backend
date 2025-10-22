@@ -56,3 +56,6 @@ export class CreateTravelDto {
   @IsOptional()
   tags?: string[];
 }
+
+
+

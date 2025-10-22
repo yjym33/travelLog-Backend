@@ -22,3 +22,6 @@ export class UpdateUserDto {
   @IsString()
   profileImage?: string;
 }
+
+
+

@@ -51,3 +51,6 @@ export class CreateStoryDto {
   @IsBoolean()
   isPublic?: boolean;
 }
+
+
+

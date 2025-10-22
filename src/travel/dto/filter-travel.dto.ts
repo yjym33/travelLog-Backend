@@ -27,3 +27,6 @@ export class FilterTravelDto {
   @IsDateString()
   endDate?: string;
 }
+
+
+
