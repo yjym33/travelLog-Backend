@@ -59,4 +59,7 @@ async function bootstrap() {
     `📚 Swagger docs available at: http://localhost:${port}/api/docs`,
   );
 }
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('서버 시작 실패:', error);
+  process.exit(1);
+});

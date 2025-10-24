@@ -47,7 +47,9 @@ export class UploadService {
       const result = await this.s3.upload(params).promise();
       return result.Location;
     } catch (error) {
-      throw new Error(`파일 업로드 실패: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : '알 수 없는 오류';
+      throw new Error(`파일 업로드 실패: ${errorMessage}`);
     }
   }
 
@@ -70,7 +72,9 @@ export class UploadService {
     try {
       await this.s3.deleteObject(params).promise();
     } catch (error) {
-      throw new Error(`파일 삭제 실패: ${error.message}`);
+      const errorMessage =
+        error instanceof Error ? error.message : '알 수 없는 오류';
+      throw new Error(`파일 삭제 실패: ${errorMessage}`);
     }
   }
 
@@ -79,6 +83,3 @@ export class UploadService {
     await Promise.all(deletePromises);
   }
 }
-
-
-
