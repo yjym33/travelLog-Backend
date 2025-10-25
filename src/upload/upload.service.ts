@@ -1,51 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as AWS from 'aws-sdk';
+import * as fs from 'fs';
+import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UploadService {
-  private s3: AWS.S3;
-  private bucketName: string;
+  private uploadDir: string;
 
   constructor(private configService: ConfigService) {
-    const region = this.configService.get<string>('AWS_REGION');
-    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
-    const secretAccessKey = this.configService.get<string>(
-      'AWS_SECRET_ACCESS_KEY',
-    );
-    const bucketName = this.configService.get<string>('AWS_S3_BUCKET');
+    // 개발 환경에서는 로컬 파일 시스템 사용
+    this.uploadDir = path.join(process.cwd(), 'uploads');
 
-    if (!region || !accessKeyId || !secretAccessKey || !bucketName) {
-      throw new Error('AWS 설정 환경 변수가 올바르게 설정되지 않았습니다.');
+    // uploads 디렉토리가 없으면 생성
+    if (!fs.existsSync(this.uploadDir)) {
+      fs.mkdirSync(this.uploadDir, { recursive: true });
     }
-
-    this.s3 = new AWS.S3({
-      region,
-      accessKeyId,
-      secretAccessKey,
-    });
-    this.bucketName = bucketName;
   }
 
-  async uploadFile(
+  uploadFile(
     file: Express.Multer.File,
     folder: string = 'images',
   ): Promise<string> {
     const fileExtension = file.originalname.split('.').pop();
-    const fileName = `${folder}/${uuidv4()}.${fileExtension}`;
+    const fileName = `${uuidv4()}.${fileExtension}`;
+    const folderPath = path.join(this.uploadDir, folder);
 
-    const params: AWS.S3.PutObjectRequest = {
-      Bucket: this.bucketName,
-      Key: fileName,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-      ACL: 'public-read',
-    };
+    // 폴더가 없으면 생성
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+
+    const filePath = path.join(folderPath, fileName);
+    const publicUrl = `http://localhost:3001/uploads/${folder}/${fileName}`;
 
     try {
-      const result = await this.s3.upload(params).promise();
-      return result.Location;
+      // 파일을 로컬에 저장
+      fs.writeFileSync(filePath, file.buffer);
+      return Promise.resolve(publicUrl);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : '알 수 없는 오류';
@@ -61,16 +53,22 @@ export class UploadService {
     return Promise.all(uploadPromises);
   }
 
-  async deleteFile(fileUrl: string): Promise<void> {
-    const key = fileUrl.split('.com/')[1];
-
-    const params: AWS.S3.DeleteObjectRequest = {
-      Bucket: this.bucketName,
-      Key: key,
-    };
-
+  deleteFile(fileUrl: string): Promise<void> {
     try {
-      await this.s3.deleteObject(params).promise();
+      // URL에서 파일 경로 추출
+      const urlParts = fileUrl.split('/uploads/');
+      if (urlParts.length < 2) {
+        throw new Error('잘못된 파일 URL입니다.');
+      }
+
+      const relativePath = urlParts[1];
+      const filePath = path.join(this.uploadDir, relativePath);
+
+      // 파일이 존재하면 삭제
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      return Promise.resolve();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : '알 수 없는 오류';

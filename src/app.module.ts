@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { TravelModule } from './travel/travel.module';
 import { StoryModule } from './story/story.module';
 import { UploadModule } from './upload/upload.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { UploadModule } from './upload/upload.module';
     TravelModule,
     StoryModule,
     UploadModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
