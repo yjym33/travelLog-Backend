@@ -26,13 +26,13 @@ import { AiModule } from './ai/ai.module';
       },
     ]),
     // 애플리케이션 모듈들
-    PrismaModule,
-    AuthModule,
-    UserModule,
-    TravelModule,
-    StoryModule,
-    UploadModule,
-    AiModule,
+    PrismaModule, // 데이터베이스
+    AuthModule, // 인증
+    UserModule, // 사용자
+    TravelModule, // 여행기록
+    StoryModule, // 스토리
+    UploadModule, // 파일업로드
+    AiModule, // AI 분석
   ],
   controllers: [AppController],
   providers: [AppService],

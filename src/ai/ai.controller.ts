@@ -5,6 +5,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -59,13 +61,32 @@ export class AiController {
     },
   })
   async analyzeImage(@Body() analyzeImageDto: AnalyzeImageDto) {
-    const tags = await this.aiService.analyzeImage(analyzeImageDto.imageUrl);
+    try {
+      // URL 유효성 검사
+      if (
+        !analyzeImageDto.imageUrl ||
+        !this.isValidUrl(analyzeImageDto.imageUrl)
+      ) {
+        throw new BadRequestException('유효하지 않은 이미지 URL입니다.');
+      }
 
-    return {
-      success: true,
-      tags,
-      confidence: 0.85, // 시뮬레이션된 신뢰도
-    };
+      const tags = await this.aiService.analyzeImage(analyzeImageDto.imageUrl);
+
+      return {
+        success: true,
+        tags,
+        confidence: 0.85, // 시뮬레이션된 신뢰도
+        message: '이미지 분석이 완료되었습니다.',
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        '이미지 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+      );
+    }
   }
 
   @Post('analyze-emotion')
@@ -103,11 +124,43 @@ export class AiController {
     },
   })
   async analyzeEmotion(@Body() analyzeEmotionDto: AnalyzeEmotionDto) {
-    const result = await this.aiService.analyzeEmotion(analyzeEmotionDto.text);
+    try {
+      // 텍스트 유효성 검사
+      if (!analyzeEmotionDto.text || analyzeEmotionDto.text.trim().length < 3) {
+        throw new BadRequestException(
+          '분석할 텍스트가 너무 짧습니다. 최소 3자 이상 입력해주세요.',
+        );
+      }
 
-    return {
-      success: true,
-      ...result,
-    };
+      const result = await this.aiService.analyzeEmotion(
+        analyzeEmotionDto.text,
+      );
+
+      return {
+        success: true,
+        ...result,
+        message: '감정 분석이 완료되었습니다.',
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        '감정 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+      );
+    }
+  }
+
+  /**
+   * URL 유효성 검사
+   */
+  private isValidUrl(url: string): boolean {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
