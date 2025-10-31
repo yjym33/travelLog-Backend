@@ -10,6 +10,10 @@ import { TravelModule } from './travel/travel.module';
 import { StoryModule } from './story/story.module';
 import { UploadModule } from './upload/upload.module';
 import { AiModule } from './ai/ai.module';
+import { FriendshipModule } from './friendship/friendship.module';
+import { LikeModule } from './like/like.module';
+import { CommentModule } from './comment/comment.module';
+import { SocialTravelModule } from './social-travel/social-travel.module';
 
 @Module({
   imports: [
@@ -33,6 +37,10 @@ import { AiModule } from './ai/ai.module';
     StoryModule, // 스토리
     UploadModule, // 파일업로드
     AiModule, // AI 분석
+    FriendshipModule, // 친구 시스템
+    LikeModule, // 좋아요 시스템
+    CommentModule, // 댓글 시스템
+    SocialTravelModule, // 소셜 여행 기록
   ],
   controllers: [AppController],
   providers: [AppService],
